@@ -13,6 +13,16 @@ apt-get update
 printf "Upgrading packages\n"
 apt-get -y upgrade
 
+printf "Installing security updates\n"
+apt-get -y install unattended-upgrades
+unattended-upgrades -d
+
+printf "Installing ubuntu dist updates\n"
+apt-get -y dist-upgrade
+
+printf "Removing old dependencies"
+apt-get -y autoremove
+
 printf "Downloading & Installing nmap\n"
 apt-get -y install nmap
 
@@ -49,10 +59,6 @@ fi
 printf "Setting up iptables\n"
 ./iptables_setup
 
-printf "TCP_SCAN_____________\n"
-
-nmap -sT localhost
-printf "UDP_SCAN_____________\n"
-nmap -sU localhost
-
-printf "_____________________\n\nDone.\n"
+printf "\n\nNeed to reboot to finish installing updates. Press Ctrl + c to cancel\n"
+sleep 5
+reboot
