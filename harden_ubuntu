@@ -1,0 +1,58 @@
+#!/bin/bash
+
+if [ "$EUID" -ne 0 ]; then
+	printf "Please run script as root\n"
+	exit;
+fi
+
+clear
+
+printf "Updating package lists\n"
+apt-get update
+
+printf "Upgrading packages\n"
+apt-get -y upgrade
+
+printf "Downloading & Installing nmap\n"
+apt-get -y install nmap
+
+printf "Running TCP scan on localhost\n"
+tcpscan=$(nmap -sT localhost)
+
+printf "Running UDP scan on localhost\n"
+udpscan=$(nmap -sU localhost)
+
+#printf "$tcpscan\n$udpscan\n"
+
+if [[ $tcpscan = *"631/tcp open  ipp"* ]]; then
+	printf "Removing cups service\n"
+	apt-get -y remove cups
+	apt-get -y remove cups-browsed	
+	apt-get -y remove cups-daemon
+fi
+
+if [[ $udpscan = *"5353/udp open|filtered zeroconf"* ]]; then
+	printf "Removing zeroconf service\n"
+	apt-get -y remove avahi-daemon
+fi
+
+iptablesfilename="iptables_setup"
+
+if [ -f $PWD/$iptablesfilename ]; then
+	printf "iptables_setup script already exists\n"
+else
+	printf "Downloading script iptables_setup\n"
+	wget https://raw.githubusercontent.com/WhiteTitanX/iptables_setup/master/iptables_setup
+	chmod 755 $PWD/$iptablesfilename
+fi
+
+printf "Setting up iptables\n"
+./iptables_setup
+
+printf "TCP_SCAN_____________\n"
+
+nmap -sT localhost
+printf "UDP_SCAN_____________\n"
+nmap -sU localhost
+
+printf "_____________________\n\nDone.\n"
